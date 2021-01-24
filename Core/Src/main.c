@@ -93,6 +93,11 @@ void SystemClock_Config(void);
 	float voltage  = 1001.1;
 	float current  = 1001.1;
 	float resistor = 1001.1;
+	
+//	float power    = 0;
+//	float voltage  = 0;
+//	float current  = 0;
+//	float resistor = 0;
 
 	
 	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

@@ -14,6 +14,7 @@
 #include <math.h>
 
 #define buffer_size 50
+#define messageCount 4
 
 char controlBuffer[20];
 char crcBuffer[4];
@@ -176,6 +177,14 @@ void sendmodA_Packets(UART_HandleTypeDef *huart,int number_message,char buffer[n
 //guiye  B modundaki paketlerin gonderimi
 void sendmodB_Packets(UART_HandleTypeDef *huart,float power,float voltage,float current,float resistor)
 {
+	int digit[messageCount]; 
+	
+	for(int i=0;i<messageCount;i++)
+		{
+			digit[i] = 1;
+		}
+	
+	
 	myBfloatValues[0][0] = power;
 	myBfloatValues[1][0] = voltage;
 	myBfloatValues[2][0] = current;
@@ -188,11 +197,36 @@ void sendmodB_Packets(UART_HandleTypeDef *huart,float power,float voltage,float 
 	*sendCrc4 = 0;
    crc = 0;
 	
-	for(int i=0;i<=3;i++)
+	for(int i=0;i<messageCount;i++)
+	{
+		if(myBfloatValues[i][0]>=10)
 		{
+		do{ 
+			myBfloatValues[i][0]=myBfloatValues[i][0]/10; 
+			digit[i]++; 
+			}	
+			while (myBfloatValues[i][0]>=10);
+		}
+	}
+
+	myBfloatValues[0][0] = power;
+	myBfloatValues[1][0] = voltage;
+	myBfloatValues[2][0] = current;
+	myBfloatValues[3][0] = resistor;
+	
+
+		for(int i=0;i<=3;i++)
+		{
+			if(digit[i] == 1)
+			sprintf(sendmodBBuf[i],"000%.1f",myBfloatValues[i][0]);
+			if(digit[i] == 2)
+			sprintf(sendmodBBuf[i],"00%.1f",myBfloatValues[i][0]);
+			if(digit[i] == 3)
+			sprintf(sendmodBBuf[i],"0%.1f",myBfloatValues[i][0]);
+			if(digit[i] == 4)
 			sprintf(sendmodBBuf[i],"%.1f",myBfloatValues[i][0]);
 		}
-	
+		
 	for(int i=0;i<=3;i++)
 		{
 			//her mesajin ilk indeksine B mod secimi girildi
@@ -239,38 +273,55 @@ void sendmodB_Packets(UART_HandleTypeDef *huart,float power,float voltage,float 
       sendmodBpackets[i][8+strlen(sendmodBBuf[i])] = '\n';				
 			crc =  0;
 		}
-		
-//		for(int j=0;j<=strlen(sendmodBpackets[numberofMessge])-1;j++)
-//					{	
-//						//HAL_UART_Transmit_DMA(huart,(uint8_t *)&sendmodBpackets[i][j],1);
-//						writeByte(huart,sendmodBpackets[numberofMessge][j]);	
-//					}		
-//		numberofMessge++;
-//					if(numberofMessge == 3)
-//						numberofMessge = 0;
-					
+			
 		for(int i=0;i<3;i++)
 			{
 
 				for(int j=0;j<=strlen(sendmodBpackets[i])-1;j++)
 					{	
-						//HAL_UART_Transmit_DMA(huart,(uint8_t *)&sendmodBpackets[i][j],1);
 						writeByte(huart,sendmodBpackets[i][j]);	
 					}		
 			}	
+			
+	  for(int i=0;i<messageCount;i++)
+		{
+			digit[i] = 1;
+		}
 }	
 //guiye  B modundaki paketlerin mcuya gonderimi
 void sendmodB_mcuPackets(UART_HandleTypeDef *huart,float value,char mode)
 {
+	int digit;
 	char string[20];
 	char packet[20];
+	int digitValue;
 	*sendCrc  = 0;
 	*sendCrc2 = 0;
 	*sendCrc3 = 0;
 	*sendCrc4 = 0;
-   crc = 0;
+  crc = 0;
+	
+	digit = 1;
+	digitValue = value;
 
+	if(digitValue>=10)
+	{
+	do{ 
+		digitValue=digitValue/10; 
+		digit++; 
+		}	
+		while (digitValue>=10);
+	}
+	
+	if(digit == 1)
+	sprintf(string,"000%.1f",value);
+	if(digit == 2)
+	sprintf(string,"00%.1f",value);
+	if(digit == 3)
+	sprintf(string,"0%.1f",value);
+	if(digit == 4)
 	sprintf(string,"%.1f",value);
+	
 
 	//her mesajin ilk indeksine B mod secimi girildi
 	packet[0] ='B';
